@@ -20,6 +20,7 @@ export const Navbar = () => {
   const navLinks = [
     { name: "首頁", href: isHomePage ? "#hero" : "/#hero" },
     { name: "關於我們", href: isHomePage ? "#about" : "/#about" },
+    { name: "服務項目", href: isHomePage ? "#services" : "/#services" },
     { name: "作品集", href: isHomePage ? "#projects" : "/#projects" },
     { name: "聯絡資訊", href: isHomePage ? "#contact" : "/#contact" },
   ];

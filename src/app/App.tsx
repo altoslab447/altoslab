@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Navbar } from "./components/Navbar";
 import { Hero } from "./components/Hero";
 import { About } from "./components/About";
+import { Services } from "./components/Services";
 import { Projects } from "./components/Projects";
 import { Contact } from "./components/Contact";
 import { CustomCursor } from "./components/CustomCursor";
@@ -20,6 +21,7 @@ const HomePage = () => (
   <>
     <Hero />
     <About />
+    <Services />
     <Projects />
   </>
 );
