@@ -10,12 +10,23 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  administration: write
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Make repo public
+        run: |
+          RESP=$(curl -s -o /dev/null -w "%{http_code}" -X PATCH \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/altoslab447/altoslab \
+            -d '{"private":false}')
+          echo "Make-public response: $RESP"
 
       - uses: actions/setup-node@v4
         with:
@@ -31,10 +42,26 @@ jobs:
         working-directory: ai-video-studio
         run: npm run build
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ai-video-studio/dist
           destination_dir: ai-video-studio
           keep_files: false
+
+      - name: Enable GitHub Pages
+        run: |
+          # Try to enable Pages (may already be enabled)
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/altoslab447/altoslab/pages \
+            -d '{"source":{"branch":"gh-pages","path":"/"}}' || true
+          # Update Pages source if already exists
+          curl -s -X PUT \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/altoslab447/altoslab/pages \
+            -d '{"source":{"branch":"gh-pages","path":"/"}}' || true
+          echo "Pages URL: https://altoslab447.github.io/altoslab/ai-video-studio/"
