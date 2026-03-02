@@ -40,7 +40,11 @@ jobs:
 
       - name: Build
         working-directory: ai-video-studio
-        run: npx vite build --base /altoslab/
+        run: |
+          node --version
+          npx --version
+          ls node_modules/.bin/vite || echo "vite not in node_modules"
+          ./node_modules/.bin/vite build --base /altoslab/ 2>&1
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
