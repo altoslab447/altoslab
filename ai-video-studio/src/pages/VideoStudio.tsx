@@ -45,18 +45,18 @@ interface GeneratedClip {
 const VIDEO_MODELS: VideoModel[] = [
   {
     id: 'hailuo-pro', label: 'Hailuo 02 Pro', provider: 'MiniMax',
-    badge: 'Best Value', badgeColor: 'cyan', quality: '1080P',
+    badge: '超值首選', badgeColor: 'cyan', quality: '1080P',
     costPerSecond: 0.045, defaultClipDuration: '6', maxDuration: '10',
-    note: 'Camera control syntax: [Push in] [Dolly out] [Static shot] [Aerial shot]',
+    note: '鏡頭控制語法：[Push in] [Dolly out] [Static shot] [Aerial shot]',
     falTextId: 'fal-ai/minimax/hailuo-02/pro/text-to-video',
     falImageId: 'fal-ai/minimax/hailuo-02/standard/image-to-video',
     inputFormat: 'hailuo',
   },
   {
     id: 'kling-pro', label: 'Kling 2.6 Pro', provider: 'Kuaishou',
-    badge: 'Cinematic', badgeColor: 'purple', quality: '1080P',
+    badge: '電影級', badgeColor: 'purple', quality: '1080P',
     costPerSecond: 0.10, defaultClipDuration: '5', maxDuration: '10',
-    note: 'Best for cinematic quality, character consistency, and film-grade output',
+    note: '最適合電影質感、角色一致性與影院級輸出',
     falTextId: 'fal-ai/kling-video/v2.6/pro/text-to-video',
     falImageId: 'fal-ai/kling-video/v2.6/pro/image-to-video',
     inputFormat: 'kling',
@@ -64,15 +64,15 @@ const VIDEO_MODELS: VideoModel[] = [
 ]
 
 const VIDEO_STYLES = [
-  { value: 'corporate', label: 'Corporate Identity', desc: 'Professional & trustworthy',
+  { value: 'corporate', label: '企業形象', desc: '專業且值得信賴',
     keywords: 'cinematic corporate identity film, professional clean aesthetic, premium brand image, 4K quality' },
-  { value: 'product', label: 'Product Showcase', desc: 'Detailed & polished',
+  { value: 'product', label: '產品展示', desc: '精緻且細膩',
     keywords: 'commercial product showcase, pristine studio lighting, macro detail shots, premium photography style' },
-  { value: 'brand_story', label: 'Brand Story', desc: 'Emotional & narrative',
+  { value: 'brand_story', label: '品牌故事', desc: '情感且敘事',
     keywords: 'emotional brand story documentary, warm cinematic lighting, narrative driven, human connection' },
-  { value: 'advertisement', label: 'Image Ad', desc: 'Dynamic & bold',
+  { value: 'advertisement', label: '形象廣告', desc: '動感且大膽',
     keywords: 'high impact commercial advertisement, dynamic energy, bold vibrant colors, fast paced cinematic' },
-  { value: 'educational', label: 'Educational', desc: 'Clear & structured',
+  { value: 'educational', label: '教育培訓', desc: '清晰且有條理',
     keywords: 'professional training video, clean informative style, modern workplace, organized visual flow' },
 ]
 
@@ -89,11 +89,11 @@ const DEFAULT_BRIEF: BriefData = {
 }
 
 const STEPS: Array<{ id: StepId; label: string; icon: React.ElementType }> = [
-  { id: 'config', label: 'Setup', icon: Settings },
-  { id: 'brief', label: 'Brief', icon: FileText },
-  { id: 'script', label: 'Script', icon: Clapperboard },
-  { id: 'generate', label: 'Generate', icon: Video },
-  { id: 'result', label: 'Download', icon: Download },
+  { id: 'config', label: '設定', icon: Settings },
+  { id: 'brief', label: '簡報', icon: FileText },
+  { id: 'script', label: '腳本', icon: Clapperboard },
+  { id: 'generate', label: '生成', icon: Video },
+  { id: 'result', label: '下載', icon: Download },
 ]
 
 // ─── Prompts & Helpers ────────────────────────────────────────────────────────
@@ -208,13 +208,13 @@ export const VideoStudio: React.FC = () => {
       })
 
       const content = completion.choices[0]?.message?.content
-      if (!content) throw new Error('GPT-4o mini returned no content — please retry')
+      if (!content) throw new Error('GPT-4o mini 未返回內容，請重試')
       const parsed = JSON.parse(content) as VideoScript
-      if (!Array.isArray(parsed.scenes) || parsed.scenes.length === 0) throw new Error('Script format invalid — please retry')
+      if (!Array.isArray(parsed.scenes) || parsed.scenes.length === 0) throw new Error('腳本格式無效，請重試')
       parsed.scenes = parsed.scenes.map(s => ({ ...s, clipDuration: s.clipDuration || selectedModel.defaultClipDuration }))
       setScript(parsed); setStep('script')
     } catch (err: unknown) {
-      setError(`❌ ${err instanceof Error ? err.message : 'Script generation failed'}`)
+      setError(`❌ ${err instanceof Error ? err.message : '腳本生成失敗'}`)
     } finally { setIsLoading(false) }
   }, [apiConfig, brief, selectedModel])
 
@@ -275,14 +275,14 @@ export const VideoStudio: React.FC = () => {
     if (!script) return
     const text = [
       `# ${brief.projectName}`, '',
-      `## Concept`, script.concept, '',
-      `## Storyline`, script.storyline, '',
+      `## 概念`, script.concept, '',
+      `## 故事線`, script.storyline, '',
       ...script.scenes.flatMap(s => [
-        `---`, `### Scene ${s.sceneNumber}: ${s.title}`,
-        `**Description:** ${s.description}`,
-        s.narration ? `**Narration:** "${s.narration}"` : '',
-        `**Prompt:** ${s.klingPrompt}`,
-        `**Duration:** ${s.clipDuration}s`, '',
+        `---`, `### 場景 ${s.sceneNumber}: ${s.title}`,
+        `**場景描述：** ${s.description}`,
+        s.narration ? `**旁白：** "${s.narration}"` : '',
+        `**提示詞：** ${s.klingPrompt}`,
+        `**時長：** ${s.clipDuration}s`, '',
       ]),
     ].join('\n')
     navigator.clipboard.writeText(text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) })
@@ -300,7 +300,7 @@ export const VideoStudio: React.FC = () => {
       <div className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 text-gray-600 hover:text-white transition-colors text-sm">
-            <ArrowLeft size={14} />Home
+            <ArrowLeft size={14} />首頁
           </Link>
           <div className="flex items-center gap-2">
             <Film size={18} className="text-cyan-400" />
@@ -339,39 +339,39 @@ export const VideoStudio: React.FC = () => {
           {/* Step 1: Config */}
           {step === 'config' && (
             <motion.div key="config" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} className="space-y-5">
-              <SectionHeader title="Studio Setup" subtitle="Configure API keys, AI model, and content language" />
+              <SectionHeader title="工作室設定" subtitle="設定 API 金鑰、AI 模型與內容語言" />
 
               <div className="bg-amber-400/8 border border-amber-400/25 rounded-xl p-4 flex gap-3">
                 <Info size={16} className="text-amber-400 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-amber-200/80"><strong>Security:</strong> Keys saved only to your browser's localStorage — never sent to any server.</p>
+                <p className="text-sm text-amber-200/80"><strong>安全性：</strong>金鑰僅儲存於您的瀏覽器 localStorage，不會傳送至任何伺服器。</p>
               </div>
 
               <Card>
                 <div className="flex items-center gap-3 mb-4">
                   <IconBadge color="cyan"><Key size={15} /></IconBadge>
-                  <div><p className="font-semibold text-white text-sm">OpenAI API Key</p><p className="text-xs text-gray-600">For GPT-4o mini script generation</p></div>
+                  <div><p className="font-semibold text-white text-sm">OpenAI API 金鑰</p><p className="text-xs text-gray-600">用於 GPT-4o mini 腳本生成</p></div>
                 </div>
                 <input type="password" placeholder="sk-proj-..." value={apiConfig.openaiKey}
                   onChange={e => setApiConfig(p => ({ ...p, openaiKey: e.target.value }))} className={inputCls} />
                 <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="mt-2 text-xs text-cyan-500 hover:text-cyan-400 flex items-center gap-1 transition-colors">
-                  <ExternalLink size={11} /> Get OpenAI API Key
+                  <ExternalLink size={11} /> 取得 OpenAI API 金鑰
                 </a>
               </Card>
 
               <Card>
                 <div className="flex items-center gap-3 mb-4">
                   <IconBadge color="purple"><Zap size={15} /></IconBadge>
-                  <div><p className="font-semibold text-white text-sm">fal.ai API Key</p><p className="text-xs text-gray-600">For AI video generation (Hailuo / Kling)</p></div>
+                  <div><p className="font-semibold text-white text-sm">fal.ai API 金鑰</p><p className="text-xs text-gray-600">用於 AI 影片生成（Hailuo / Kling）</p></div>
                 </div>
                 <input type="password" placeholder="fal_key_..." value={apiConfig.falKey}
                   onChange={e => setApiConfig(p => ({ ...p, falKey: e.target.value }))} className={inputCls} />
                 <a href="https://fal.ai/dashboard/keys" target="_blank" rel="noopener noreferrer" className="mt-2 text-xs text-purple-500 hover:text-purple-400 flex items-center gap-1 transition-colors">
-                  <ExternalLink size={11} /> Get fal.ai API Key — free credits on signup
+                  <ExternalLink size={11} /> 取得 fal.ai API 金鑰 — 註冊即享免費額度
                 </a>
               </Card>
 
               <Card>
-                <Label>AI Video Model</Label>
+                <Label>AI 影片模型</Label>
                 <div className="space-y-2 mt-1">
                   {VIDEO_MODELS.map(m => (
                     <button key={m.id} onClick={() => setApiConfig(p => ({ ...p, modelId: m.id }))}
@@ -390,18 +390,18 @@ export const VideoStudio: React.FC = () => {
                 </div>
                 <div className="mt-3 p-3 bg-black/30 rounded-lg border border-white/5">
                   <p className="text-xs text-gray-600">
-                    <strong className="text-gray-500">Free test (web UI, no API needed):</strong>{' '}
-                    <a href="https://app.hailuo.ai" target="_blank" rel="noopener noreferrer" className="text-cyan-500 hover:underline">Hailuo</a> (10/day) ·{' '}
-                    <a href="https://lumalabs.ai" target="_blank" rel="noopener noreferrer" className="text-cyan-500 hover:underline">Luma</a> (5/day) ·{' '}
-                    <a href="https://app.pixverse.ai" target="_blank" rel="noopener noreferrer" className="text-cyan-500 hover:underline">PixVerse</a> (5/day) — all watermark-free
+                    <strong className="text-gray-500">免費測試（網頁界面，無需 API）：</strong>{' '}
+                    <a href="https://app.hailuo.ai" target="_blank" rel="noopener noreferrer" className="text-cyan-500 hover:underline">Hailuo</a>（10次/天）·{' '}
+                    <a href="https://lumalabs.ai" target="_blank" rel="noopener noreferrer" className="text-cyan-500 hover:underline">Luma</a>（5次/天）·{' '}
+                    <a href="https://app.pixverse.ai" target="_blank" rel="noopener noreferrer" className="text-cyan-500 hover:underline">PixVerse</a>（5次/天）— 均無浮水印
                   </p>
                 </div>
               </Card>
 
               <Card>
-                <Label icon={<Globe size={13} className="text-cyan-400" />}>Script Content Language</Label>
+                <Label icon={<Globe size={13} className="text-cyan-400" />}>腳本內容語言</Label>
                 <div className="flex gap-3 mt-1">
-                  {([{ val: 'en' as ContentLang, label: '🇺🇸 English', desc: 'For global / English-speaking audience' }, { val: 'zh' as ContentLang, label: '🇹🇼 繁體中文', desc: '針對中文市場受眾' }] as const).map(opt => (
+                  {([{ val: 'en' as ContentLang, label: '🇺🇸 English', desc: '針對全球／英語受眾' }, { val: 'zh' as ContentLang, label: '🇹🇼 繁體中文', desc: '針對中文市場受眾' }] as const).map(opt => (
                     <button key={opt.val} onClick={() => setApiConfig(p => ({ ...p, contentLang: opt.val }))}
                       className={`flex-1 p-3 rounded-xl border text-left transition-all ${apiConfig.contentLang === opt.val ? 'border-cyan-400 bg-cyan-400/8 text-white' : 'border-white/8 text-gray-500 hover:border-white/20'}`}>
                       <div className="font-medium text-sm">{opt.label}</div>
@@ -409,36 +409,36 @@ export const VideoStudio: React.FC = () => {
                     </button>
                   ))}
                 </div>
-                <p className="text-xs text-gray-700 mt-2">Video generation prompts are always in English regardless of this setting.</p>
+                <p className="text-xs text-gray-700 mt-2">無論此設定為何，影片生成提示詞一律使用英文。</p>
               </Card>
 
-              <PrimaryButton onClick={() => setStep('brief')} disabled={!isConfigValid}>Continue <ChevronRight size={17} /></PrimaryButton>
+              <PrimaryButton onClick={() => setStep('brief')} disabled={!isConfigValid}>繼續 <ChevronRight size={17} /></PrimaryButton>
             </motion.div>
           )}
 
           {/* Step 2: Brief */}
           {step === 'brief' && (
             <motion.div key="brief" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} className="space-y-5">
-              <SectionHeader title="Video Brief" subtitle="Provide your brand info — AI will craft the script" />
+              <SectionHeader title="影片簡報" subtitle="提供品牌資訊，AI 將自動生成腳本" />
 
-              <Card><Label>Project Name *</Label>
-                <input type="text" placeholder="e.g. ALTOSLAB 2026 Brand Film" value={brief.projectName}
+              <Card><Label>專案名稱 *</Label>
+                <input type="text" placeholder="例：ALTOSLAB 2026 品牌形象片" value={brief.projectName}
                   onChange={e => setBrief(p => ({ ...p, projectName: e.target.value }))} className={inputCls} />
               </Card>
 
-              <Card><Label>Brand / Product Description *</Label>
-                <textarea placeholder="Describe your brand, product, or service — core values, unique features, tone, tagline..."
+              <Card><Label>品牌／產品描述 *</Label>
+                <textarea placeholder="描述您的品牌、產品或服務——核心價值、特色、語調、標語..."
                   value={brief.brand} onChange={e => setBrief(p => ({ ...p, brand: e.target.value }))} rows={4} className={textareaCls} />
               </Card>
 
               <Card>
-                <Label icon={<Users size={13} className="text-cyan-400" />}>Target Audience *</Label>
-                <input type="text" placeholder="e.g. Urban professionals 25–45, enterprise decision makers, tech enthusiasts..."
+                <Label icon={<Users size={13} className="text-cyan-400" />}>目標受眾 *</Label>
+                <input type="text" placeholder="例：都市專業人士 25–45 歲、企業決策者、科技愛好者..."
                   value={brief.targetAudience} onChange={e => setBrief(p => ({ ...p, targetAudience: e.target.value }))} className={inputCls} />
               </Card>
 
               <Card>
-                <Label>Video Style</Label>
+                <Label>影片風格</Label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1">
                   {VIDEO_STYLES.map(style => (
                     <button key={style.value} onClick={() => setBrief(p => ({ ...p, videoStyle: style.value }))}
@@ -450,14 +450,14 @@ export const VideoStudio: React.FC = () => {
                 </div>
               </Card>
 
-              <Card><Label>Core Message *</Label>
-                <textarea placeholder="What should viewers remember or feel? What action should they take?"
+              <Card><Label>核心訊息 *</Label>
+                <textarea placeholder="觀眾應記住什麼？感受什麼？應採取什麼行動？"
                   value={brief.coreMessage} onChange={e => setBrief(p => ({ ...p, coreMessage: e.target.value }))} rows={3} className={textareaCls} />
               </Card>
 
               <div className="grid grid-cols-2 gap-4">
                 <Card>
-                  <Label icon={<Clock size={13} className="text-cyan-400" />}>Duration</Label>
+                  <Label icon={<Clock size={13} className="text-cyan-400" />}>影片時長</Label>
                   <div className="flex gap-2 mt-2">
                     {['15', '30', '60'].map(d => (
                       <button key={d} onClick={() => setBrief(p => ({ ...p, duration: d }))}
@@ -466,7 +466,7 @@ export const VideoStudio: React.FC = () => {
                   </div>
                 </Card>
                 <Card>
-                  <Label icon={<Monitor size={13} className="text-cyan-400" />}>Aspect Ratio</Label>
+                  <Label icon={<Monitor size={13} className="text-cyan-400" />}>畫面比例</Label>
                   <div className="flex gap-2 mt-2">
                     {[{ v: '16:9', l: '16:9' }, { v: '9:16', l: '9:16' }, { v: '1:1', l: '1:1' }].map(ar => (
                       <button key={ar.v} onClick={() => setBrief(p => ({ ...p, aspectRatio: ar.v }))}
@@ -476,23 +476,23 @@ export const VideoStudio: React.FC = () => {
                 </Card>
               </div>
 
-              <Card><Label>Reference Image URL (optional)</Label>
+              <Card><Label>參考圖片網址（選填）</Label>
                 <input type="url" placeholder="https://example.com/brand-image.jpg" value={brief.referenceImageUrl}
                   onChange={e => setBrief(p => ({ ...p, referenceImageUrl: e.target.value }))} className={inputCls + ' font-mono'} />
-                <p className="text-xs text-gray-700 mt-2">First scene will auto-switch to image-to-video mode when provided</p>
+                <p className="text-xs text-gray-700 mt-2">提供後第一個場景將自動切換為圖片轉影片模式</p>
               </Card>
 
-              <Card><Label>Additional Notes (optional)</Label>
-                <textarea placeholder="Style preferences, colors, references to avoid, examples..."
+              <Card><Label>補充說明（選填）</Label>
+                <textarea placeholder="風格偏好、配色、避免參考的範例..."
                   value={brief.additionalNotes} onChange={e => setBrief(p => ({ ...p, additionalNotes: e.target.value }))} rows={3} className={textareaCls} />
               </Card>
 
               {error && <ErrorBox message={error} />}
 
               <div className="flex gap-3">
-                <SecondaryButton onClick={() => setStep('config')}><ChevronLeft size={16} /> Back</SecondaryButton>
+                <SecondaryButton onClick={() => setStep('config')}><ChevronLeft size={16} /> 返回</SecondaryButton>
                 <PrimaryButton onClick={generateScript} disabled={!isBriefValid || isLoading} className="flex-1">
-                  {isLoading ? <><Loader2 size={16} className="animate-spin" /> Generating script...</> : <><Wand2 size={16} /> Generate Script</>}
+                  {isLoading ? <><Loader2 size={16} className="animate-spin" /> 腳本生成中...</> : <><Wand2 size={16} /> 生成腳本</>}
                 </PrimaryButton>
               </div>
             </motion.div>
@@ -501,39 +501,39 @@ export const VideoStudio: React.FC = () => {
           {/* Step 3: Script */}
           {step === 'script' && script && (
             <motion.div key="script" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} className="space-y-5">
-              <SectionHeader title="Script Review" subtitle="Review and edit the AI-generated script before production" />
+              <SectionHeader title="腳本審閱" subtitle="在製作前審閱並編輯 AI 生成的腳本" />
 
               <div className="bg-gradient-to-r from-cyan-400/8 to-purple-600/8 border border-cyan-400/20 rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <Sparkles size={16} className="text-cyan-400" />
-                    <h3 className="font-bold text-cyan-400 text-sm uppercase tracking-wider">Creative Concept</h3>
+                    <h3 className="font-bold text-cyan-400 text-sm uppercase tracking-wider">創意概念</h3>
                   </div>
                   <button onClick={exportScript} className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-white border border-white/10 hover:border-white/30 px-3 py-1.5 rounded-lg transition-all">
-                    {copied ? <><CheckCircle size={11} className="text-emerald-400" /> Copied!</> : <><Copy size={11} /> Export Script</>}
+                    {copied ? <><CheckCircle size={11} className="text-emerald-400" /> 已複製！</> : <><Copy size={11} /> 匯出腳本</>}
                   </button>
                 </div>
                 <p className="text-white text-sm leading-relaxed mb-3">{script.concept}</p>
                 <div className="border-t border-white/8 pt-3">
-                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Storyline</p>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">故事線</p>
                   <p className="text-gray-400 text-sm leading-relaxed">{script.storyline}</p>
                 </div>
               </div>
 
               <div className="bg-zinc-900/60 border border-white/5 rounded-xl px-5 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm text-gray-400">
-                  <DollarSign size={14} className="text-cyan-400" />Estimated generation cost
+                  <DollarSign size={14} className="text-cyan-400" />預估生成費用
                 </div>
                 <div>
                   <span className="text-white font-mono font-bold">${estimatedCost.toFixed(2)}</span>
-                  <span className="text-gray-600 text-xs ml-1">USD · {script.scenes.length} scenes · {selectedModel.label}</span>
+                  <span className="text-gray-600 text-xs ml-1">USD · {script.scenes.length} 個場景 · {selectedModel.label}</span>
                 </div>
               </div>
 
               {selectedModel.inputFormat === 'hailuo' && (
                 <div className="bg-zinc-900/60 border border-white/5 rounded-xl p-4">
                   <p className="text-xs text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                    <ClipboardList size={11} /> Hailuo Camera Control (append to prompts)
+                    <ClipboardList size={11} /> Hailuo 鏡頭控制（附加至提示詞）
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {HAILUO_CAMERA_HINTS.map(hint => (
@@ -552,7 +552,7 @@ export const VideoStudio: React.FC = () => {
                         <h3 className="font-semibold text-white text-sm">{scene.title}</h3>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-600">Duration</span>
+                        <span className="text-xs text-gray-600">時長</span>
                         <div className="flex gap-1">
                           {['5', '6', '10'].map(d => (
                             <button key={d} onClick={() => { const s = [...script.scenes]; s[i] = { ...scene, clipDuration: d }; setScript({ ...script, scenes: s }) }}
@@ -563,17 +563,17 @@ export const VideoStudio: React.FC = () => {
                     </div>
                     <div className="space-y-3">
                       <div>
-                        <p className="text-xs text-gray-600 uppercase tracking-wider mb-1">Description</p>
+                        <p className="text-xs text-gray-600 uppercase tracking-wider mb-1">場景描述</p>
                         <p className="text-gray-300 text-sm leading-relaxed">{scene.description}</p>
                       </div>
                       {scene.narration && (
                         <div>
-                          <p className="text-xs text-gray-600 uppercase tracking-wider mb-1">Narration</p>
-                          <p className="text-gray-400 text-sm italic">"{scene.narration}"</p>
+                          <p className="text-xs text-gray-600 uppercase tracking-wider mb-1">旁白</p>
+                          <p className="text-gray-400 text-sm italic">「{scene.narration}」</p>
                         </div>
                       )}
                       <div>
-                        <p className="text-xs text-cyan-600 uppercase tracking-wider mb-1">Video Prompt — editable</p>
+                        <p className="text-xs text-cyan-600 uppercase tracking-wider mb-1">影片提示詞 — 可編輯</p>
                         <textarea value={scene.klingPrompt}
                           onChange={e => { const s = [...script.scenes]; s[i] = { ...scene, klingPrompt: e.target.value }; setScript({ ...script, scenes: s }) }}
                           rows={5} className="w-full bg-black/50 border border-white/8 rounded-lg px-3 py-2.5 text-cyan-200/90 text-xs font-mono leading-relaxed focus:outline-none focus:border-cyan-400/40 resize-none" />
@@ -584,9 +584,9 @@ export const VideoStudio: React.FC = () => {
               </div>
 
               <div className="flex gap-3">
-                <SecondaryButton onClick={generateScript} disabled={isLoading}><RefreshCw size={14} /> Regenerate</SecondaryButton>
+                <SecondaryButton onClick={generateScript} disabled={isLoading}><RefreshCw size={14} /> 重新生成</SecondaryButton>
                 <PrimaryButton onClick={() => generateVideos()} disabled={isLoading} className="flex-1">
-                  <Play size={16} /> Generate Videos (~${estimatedCost.toFixed(2)})
+                  <Play size={16} /> 生成影片（約 ${estimatedCost.toFixed(2)}）
                 </PrimaryButton>
               </div>
             </motion.div>
@@ -595,17 +595,17 @@ export const VideoStudio: React.FC = () => {
           {/* Step 4: Generate */}
           {step === 'generate' && (
             <motion.div key="generate" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} className="space-y-5">
-              <SectionHeader title="Generating Videos" subtitle={`${selectedModel.label} is rendering your scenes — ~2–5 min per clip`} />
+              <SectionHeader title="影片生成中" subtitle={`${selectedModel.label} 正在渲染您的場景 — 每段約 2–5 分鐘`} />
               <Card>
                 <div className="flex justify-between text-sm mb-3">
-                  <span className="text-gray-400">Overall progress</span>
+                  <span className="text-gray-400">整體進度</span>
                   <span className="text-cyan-400 font-mono font-bold">{progress}%</span>
                 </div>
                 <div className="h-1.5 bg-black rounded-full overflow-hidden">
                   <motion.div className="h-full bg-gradient-to-r from-cyan-400 to-purple-600 rounded-full"
                     animate={{ width: `${progress}%` }} transition={{ duration: 0.6, ease: 'easeOut' }} />
                 </div>
-                <p className="text-xs text-gray-700 mt-2 text-center">{clips.filter(c => c.status === 'done').length} / {clips.length} scenes complete</p>
+                <p className="text-xs text-gray-700 mt-2 text-center">{clips.filter(c => c.status === 'done').length} / {clips.length} 個場景完成</p>
               </Card>
               <div className="space-y-3">
                 {clips.map(clip => (
@@ -642,12 +642,12 @@ export const VideoStudio: React.FC = () => {
                   className="w-14 h-14 bg-emerald-400/15 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle size={28} className="text-emerald-400" />
                 </motion.div>
-                <h1 className="text-3xl font-bold mb-1">Production Complete</h1>
-                <p className="text-gray-500 text-sm">{brief.projectName} — all scenes processed</p>
+                <h1 className="text-3xl font-bold mb-1">製作完成</h1>
+                <p className="text-gray-500 text-sm">{brief.projectName} — 所有場景已處理完畢</p>
               </div>
 
               <div className="bg-gradient-to-r from-cyan-400/8 to-purple-600/8 border border-white/8 rounded-xl p-5 grid grid-cols-4 text-center divide-x divide-white/5">
-                {[{ value: clips.filter(c => c.status === 'done').length, label: 'Done' }, { value: failedClips.length, label: 'Failed' }, { value: `${brief.duration}s`, label: 'Duration' }, { value: brief.aspectRatio, label: 'Ratio' }].map((stat, i) => (
+                {[{ value: clips.filter(c => c.status === 'done').length, label: '完成' }, { value: failedClips.length, label: '失敗' }, { value: `${brief.duration}s`, label: '時長' }, { value: brief.aspectRatio, label: '比例' }].map((stat, i) => (
                   <div key={i} className="px-4"><div className="text-2xl font-black text-white">{stat.value}</div><div className="text-xs text-gray-500 mt-0.5">{stat.label}</div></div>
                 ))}
               </div>
@@ -655,10 +655,10 @@ export const VideoStudio: React.FC = () => {
               {failedClips.length > 0 && (
                 <div className="bg-red-400/8 border border-red-400/20 rounded-xl p-4 flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm text-red-300">
-                    <AlertCircle size={14} />{failedClips.length} scene{failedClips.length > 1 ? 's' : ''} failed
+                    <AlertCircle size={14} />{failedClips.length} 個場景失敗
                   </div>
                   <button onClick={retryFailed} className="flex items-center gap-1.5 bg-red-400/15 hover:bg-red-400/25 border border-red-400/30 text-red-400 px-4 py-1.5 rounded-lg text-xs font-medium transition-colors">
-                    <RotateCcw size={12} /> Retry Failed
+                    <RotateCcw size={12} /> 重試失敗場景
                   </button>
                 </div>
               )}
@@ -674,20 +674,20 @@ export const VideoStudio: React.FC = () => {
                       {clip.status === 'done' && clip.videoUrl && (
                         <a href={clip.videoUrl} download={`scene-${clip.sceneNumber}.mp4`} target="_blank" rel="noopener noreferrer"
                           className="flex items-center gap-1.5 bg-cyan-400/15 hover:bg-cyan-400/25 border border-cyan-400/30 text-cyan-400 px-4 py-1.5 rounded-lg text-xs font-medium transition-colors">
-                          <Download size={12} /> Download
+                          <Download size={12} /> 下載
                         </a>
                       )}
                     </div>
                     {clip.status === 'done' && clip.videoUrl
                       ? <video src={clip.videoUrl} controls className="w-full bg-black" style={{ maxHeight: 400 }} />
                       : clip.status === 'error'
-                      ? <div className="p-4 flex items-center gap-2 text-red-400 text-sm"><AlertCircle size={14} />{clip.error || 'Failed'}</div>
-                      : <div className="p-4 text-gray-600 text-sm">Not generated</div>}
+                      ? <div className="p-4 flex items-center gap-2 text-red-400 text-sm"><AlertCircle size={14} />{clip.error || '失敗'}</div>
+                      : <div className="p-4 text-gray-600 text-sm">尚未生成</div>}
                   </div>
                 ))}
               </div>
 
-              <SecondaryButton onClick={resetAll} className="w-full justify-center"><RefreshCw size={14} /> Start New Project</SecondaryButton>
+              <SecondaryButton onClick={resetAll} className="w-full justify-center"><RefreshCw size={14} /> 開始新專案</SecondaryButton>
             </motion.div>
           )}
 
@@ -743,8 +743,8 @@ const ErrorBox = ({ message }: { message: string }) => (
 )
 
 const ClipStatus = ({ status }: { status: GeneratedClip['status'] }) => {
-  if (status === 'pending') return <span className="text-xs text-gray-600 flex items-center gap-1"><Clock size={11} /> Waiting</span>
-  if (status === 'generating') return <span className="text-xs text-cyan-400 flex items-center gap-1"><Loader2 size={11} className="animate-spin" /> Rendering</span>
-  if (status === 'done') return <span className="text-xs text-emerald-400 flex items-center gap-1"><CheckCircle size={11} /> Done</span>
-  return <span className="text-xs text-red-400 flex items-center gap-1"><AlertCircle size={11} /> Failed</span>
+  if (status === 'pending') return <span className="text-xs text-gray-600 flex items-center gap-1"><Clock size={11} /> 等待中</span>
+  if (status === 'generating') return <span className="text-xs text-cyan-400 flex items-center gap-1"><Loader2 size={11} className="animate-spin" /> 渲染中</span>
+  if (status === 'done') return <span className="text-xs text-emerald-400 flex items-center gap-1"><CheckCircle size={11} /> 完成</span>
+  return <span className="text-xs text-red-400 flex items-center gap-1"><AlertCircle size={11} /> 失敗</span>
 }
