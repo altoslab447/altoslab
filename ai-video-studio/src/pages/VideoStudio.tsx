@@ -161,8 +161,8 @@ export const VideoStudio: React.FC = () => {
   const [apiConfig, setApiConfig] = useState<ApiConfig>(() => {
     try {
       return {
-        openaiKey: localStorage.getItem('avs_openai') || '',
-        falKey: localStorage.getItem('avs_fal') || '',
+        openaiKey: localStorage.getItem('avs_openai') || import.meta.env.VITE_OPENAI_KEY || '',
+        falKey: localStorage.getItem('avs_fal') || import.meta.env.VITE_FAL_KEY || '',
         modelId: localStorage.getItem('avs_model') || VIDEO_MODELS[0].id,
         contentLang: (localStorage.getItem('avs_lang') as ContentLang) || 'en',
       }
