@@ -4,5 +4,5 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: '/altoslab/ai-video-studio/',
+  base: process.env.VITE_BASE ?? '/',
 })
