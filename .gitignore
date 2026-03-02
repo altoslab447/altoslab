@@ -1,5 +1,5 @@
 node_modules/
-dist/
+# dist/ intentionally tracked for ai-video-studio pre-built deployment
 .DS_Store
 .vercel
 
@@ -14,6 +14,6 @@ TOOLS.md
 USER.md
 
 # Build output at root (from deployment attempts)
-assets/
-docs/
-index.html
+/assets/
+/docs/
+/index.html

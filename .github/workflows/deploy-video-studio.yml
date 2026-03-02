@@ -4,7 +4,7 @@ on:
   push:
     branches: [claude/ai-video-studio-fzj2p]
     paths:
-      - 'ai-video-studio/**'
+      - 'ai-video-studio/dist/**'
       - '.github/workflows/deploy-video-studio.yml'
   workflow_dispatch:
 
@@ -26,38 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: ai-video-studio/package-lock.json
-
-      - name: Install dependencies
-        working-directory: ai-video-studio
-        run: npm ci
-
-      - name: Build
-        id: build
-        working-directory: ai-video-studio
-        run: |
-          ./node_modules/.bin/vite build --base /altoslab/ > ../build.log 2>&1
-          BUILD_EXIT=$?
-          cat ../build.log
-          exit $BUILD_EXIT
-        continue-on-error: true
-
-      - name: Upload build log artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-log
-          path: build.log
-
-      - name: Fail if build failed
-        if: steps.build.outcome == 'failure'
-        run: exit 1
-
-      - name: Upload Pages artifact
+      - name: Upload pre-built dist to Pages
         uses: actions/upload-pages-artifact@v3
         with:
           path: ai-video-studio/dist
