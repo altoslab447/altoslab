@@ -23,6 +23,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
       - name: Upload pre-built dist to Pages
         uses: actions/upload-pages-artifact@v3
         with:
