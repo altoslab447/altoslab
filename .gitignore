@@ -12,7 +12,6 @@ IDENTITY.md
 SOUL.md
 TOOLS.md
 USER.md
-.github/
 
 # Build output at root (from deployment attempts)
 assets/
