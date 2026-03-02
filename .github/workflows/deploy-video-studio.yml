@@ -3,9 +3,6 @@ name: Deploy AI Video Studio to GitHub Pages
 on:
   push:
     branches: [claude/ai-video-studio-fzj2p]
-    paths:
-      - 'ai-video-studio/dist/**'
-      - '.github/workflows/deploy-video-studio.yml'
   workflow_dispatch:
 
 permissions:
