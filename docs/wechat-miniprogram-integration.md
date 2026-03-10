@@ -1060,4 +1060,335 @@ Bind token 是一次性、有時效、與特定 user_id 綁定的隨機值，只
 
 ---
 
-*文件版本：v1.0 — 2026-03-10*
+## 13. GitHub 開發流程
+
+### 13.1 分支策略
+
+```
+main  ──────────────────────────────────────────────────► (Vercel Production)
+  │
+  ├── feature/<name>   新功能開發
+  ├── fix/<name>       Bug 修復
+  └── claude/<slug>    AI 輔助開發（如本文件所在的分支）
+```
+
+**命名規則**：
+- `feature/wechat-qr-binding` — 功能
+- `fix/vps-health-check-timeout` — 修復
+- `claude/analyze-wechat-automation-BGsPJ` — Claude 工作分支
+
+### 13.2 Commit Message 格式
+
+```
+type: 簡短描述（英文或中文皆可）
+
+type 可以是：
+  feat     新功能
+  fix      修 bug
+  docs     只改文件
+  chore    設定、依賴、CI 相關
+  refactor 重構（不改行為）
+  style    格式調整
+  test     測試相關
+```
+
+範例：
+```
+feat: add WeChat QR binding modal to checkout success page
+fix: handle bind_token expiry edge case on re-scan
+docs: add GitHub workflow and post-payment user flow
+chore: update .gitignore to allow docs/*.md
+```
+
+### 13.3 PR 流程
+
+```
+1. 本地建立分支
+   git checkout -b feature/wechat-qr-binding
+
+2. 開發、commit
+
+3. push 到 remote
+   git push -u origin feature/wechat-qr-binding
+
+4. 在 GitHub 開 Pull Request
+   - title: 用 commit 格式，如「feat: add WeChat QR binding modal」
+   - description: 填什麼被改了、為什麼、怎麼測試
+   - 附上截圖或錄屏（UI 改動必備）
+
+5. Vercel 自動在 PR comment 貼上 Preview URL
+   → 可直接點開測試，不需要在本地跑
+
+6. Review（至少一人 approve）
+
+7. Merge to main → Vercel 自動部署到 Production
+```
+
+### 13.4 Vercel 整合（前端）
+
+| 事件 | Vercel 行為 |
+|------|------------|
+| push 到任何非 main 分支 | 自動建立 Preview 環境，URL 格式：`altoslab-<hash>.vercel.app` |
+| 開 PR | PR comment 自動附上 Preview URL + 部署狀態 |
+| merge to main | 自動部署到 Production（`altoslab.vercel.app` 或自訂域名）|
+| PR 關閉 | Preview 環境自動刪除 |
+
+**本地開發**：
+```bash
+npm install
+npm run dev   # Vite dev server, 熱更新
+npm run build # 確認 production build 無報錯
+```
+
+### 13.5 後端 CI（未來實作，建議設置）
+
+後端 Go 控制平面建議加入 GitHub Actions：
+
+```yaml
+# .github/workflows/backend.yml
+name: Backend CI
+
+on:
+  pull_request:
+    paths:
+      - 'control-plane/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version: '1.22' }
+      - run: cd control-plane && go test ./...
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -t openclaw-control-plane ./control-plane
+```
+
+PR merge to main 後，另一個 workflow 負責 push Docker image 到 registry 並觸發 VPS 上的 rolling update。
+
+### 13.6 Branch Protection Rules（建議）
+
+在 GitHub repo Settings → Branches → `main` 加入：
+
+| Rule | 設定 |
+|------|------|
+| Require pull request before merging | ✅ |
+| Required approvals | 1 |
+| Require status checks to pass | Vercel deployment check（前端）+ Go tests（後端）|
+| Do not allow bypassing above settings | ✅ |
+| Restrict deletions | ✅ |
+
+---
+
+## 14. 付款後完整 User Flow
+
+**設計原則：用戶整個流程只需要 2 個動作 — 填信用卡 + 掃 QR。**
+
+不需要填任何其他表單、不需要記密碼、不需要輸入邀請碼。身份識別全部由微信 openid 自動完成。
+
+---
+
+### Phase A：付款成功（用戶填完信用卡，Stripe 確認）
+
+**用戶看到**：Stripe Checkout 頁面跳轉回官網 success 頁面
+
+**系統在 2 秒內完成**：
+```
+Stripe webhook → POST /api/webhooks/stripe
+     │
+     ├── 驗證 webhook signature
+     ├── 建立 users 資料（email、subscription_status='active'、expires_at）
+     ├── 觸發 VPS provisioning 流程（非同步，可能需要 1-3 分鐘）
+     └── 回傳 200 給 Stripe（必須在 30 秒內，否則 Stripe 會重送）
+```
+
+**用戶看到的 success 頁面**（立即顯示，不等 VPS）：
+```
+┌─────────────────────────────────────────┐
+│  ✅ 訂閱成功！                           │
+│                                         │
+│  下一步：綁定你的微信小程序              │
+│  掃描下方 QR 碼，即可開始使用龍蝦 AI    │
+│                                         │
+│         [  QR Code 圖片  ]              │
+│                                         │
+│  ⏳ QR 碼有效時間：4:59                  │
+│                                         │
+│  如果 QR 過期，請點這裡重新生成          │
+└─────────────────────────────────────────┘
+```
+
+QR code 在 success 頁載入時**自動生成**（呼叫 `POST /api/wechat/generate-bind-qr`），不需要用戶額外點擊。
+
+---
+
+### Phase B：官網等待用戶掃碼
+
+**官網行為**：
+- 每 3 秒輪詢 `GET /api/wechat/bind-status?token=<bind_token>`
+- 倒計時顯示 QR 剩餘有效時間（5 分鐘）
+- 倒計時歸零後，自動顯示「重新生成」按鈕
+
+**後台同時進行**（用戶感知不到）：
+- VPS provisioning（約 1-3 分鐘）
+- 完成後 `vps_instances.status` 更新為 `ready`
+
+**Error 狀態**：
+| 情況 | 官網顯示 |
+|------|---------|
+| 5 分鐘未掃碼 | 「QR 碼已過期」+ 「重新生成」按鈕 |
+| 網路斷線 | 「載入失敗，請重新整理頁面」|
+| Stripe webhook 延遲 | QR 生成前先顯示 spinner（等帳號建立完成）|
+
+---
+
+### Phase C：用戶掃 QR → 小程序完成綁定
+
+**用戶動作**：打開微信 → 掃一掃 → 小程序自動開啟
+
+**小程序 bind page 自動執行**（用戶只看到 loading → 成功）：
+```
+打開 pages/bind（scene 含 bind_token）
+     │
+     ├── 顯示「正在綁定您的帳號...」spinner
+     ├── wx.login() → 取得 code
+     ├── POST /api/wechat/bind { code, bind_token }
+     │       │
+     │       ├── 後端：jscode2session → 取得 openid
+     │       ├── 後端：INSERT wechat_bindings（openid ↔ user_id）
+     │       ├── 後端：發行 wechat_session_token（30 天有效）
+     │       └── 後端：標記 bind_token 為 used
+     │
+     └── 綁定成功 → 顯示「✅ 綁定成功！」→ 2 秒後進入聊天
+```
+
+**同時官網**：bind-status polling 收到 `completed` → 顯示「✅ 微信綁定成功！」→ Modal 自動關閉
+
+**用戶**：什麼都不需要輸入，全程自動完成。
+
+**Error 狀態**：
+| 情況 | 小程序顯示 |
+|------|-----------|
+| bind_token 已過期 | 「QR 碼已過期，請返回官網重新生成」+ 官網連結 |
+| bind_token 已被用過 | 「已完成綁定，請直接使用龍蝦」|
+| 此微信已綁定其他帳號 | 「此微信帳號已綁定其他龍蝦帳號，請聯繫客服」|
+| 網路錯誤 | 「綁定失敗，請重試」+ 重試按鈕 |
+
+---
+
+### Phase D：小程序首次使用（VPS 可能還在 Provisioning）
+
+用戶進入聊天頁後，後台 VPS 可能還沒 ready。
+
+**情況一：VPS 已 ready**（3 分鐘後掃碼的用戶）
+```
+直接顯示聊天介面，可以立即輸入
+```
+
+**情況二：VPS 還在 provisioning**（付款後立刻掃碼的用戶）
+```
+┌─────────────────────────────────────────┐
+│  🦞 龍蝦正在準備中                       │
+│                                         │
+│  您的專屬龍蝦 AI 實例正在建立，          │
+│  預計需要 1-3 分鐘，請稍候...            │
+│                                         │
+│  ████████░░░░░░░░  60%                  │
+│                                         │
+│  完成後將自動跳轉至聊天介面              │
+└─────────────────────────────────────────┘
+```
+
+小程序每 10 秒輪詢 `GET /api/user/me`，一旦 `vps.status = 'ready'` 自動跳轉到聊天介面。
+
+**情況三：VPS 出現錯誤**（provision 失敗）
+```
+┌─────────────────────────────────────────┐
+│  ⚠️ 龍蝦準備遇到問題                     │
+│                                         │
+│  我們已收到通知，正在處理。              │
+│  請稍後再試，或聯繫客服。               │
+│                                         │
+│  [重試]  [聯繫客服]                     │
+└─────────────────────────────────────────┘
+```
+
+---
+
+### Phase E：日常使用（每次打開小程序）
+
+用戶每次打開小程序，**不需要任何登入操作**，直接進聊天。
+
+**系統自動執行**（約 1 秒，用戶幾乎感覺不到）：
+```
+pages/index onLoad
+     │
+     ├── 從 wx.getStorageSync 取出 cached session_token
+     ├── wx.login() → code（靜默執行）
+     ├── POST /api/wechat/login { code }（刷新 session + 確認訂閱狀態）
+     └── session 有效 + vps ready → 直接跳轉 pages/chat
+```
+
+**Session 管理**：
+- `wechat_session_token` 存在 `wx.setStorageSync`，30 天有效
+- 每次啟動都刷新 `last_used_at`
+- 30 天未使用才需要重新走 `wx.login()` 流程（對用戶透明）
+
+---
+
+### Phase F：訂閱到期
+
+**用戶打開小程序時**，`POST /api/wechat/login` 返回 `auth_state: "subscription_expired"`：
+
+```
+┌─────────────────────────────────────────┐
+│  您的龍蝦訂閱已到期                      │
+│                                         │
+│  到期日：2026-03-10                      │
+│                                         │
+│  續訂後可立即繼續使用，                  │
+│  您的聊天記錄和設定都會保留。            │
+│                                         │
+│         [前往官網續訂]                   │
+│                                         │
+│  如有疑問請聯繫客服                      │
+└─────────────────────────────────────────┘
+```
+
+用戶在官網續訂（Stripe 付款）→ webhook 更新 `subscription_expires_at` → 用戶重開小程序即可恢復使用。**VPS 不需要重新 provision**（原 VPS 保持，只是暫停接受請求）。
+
+---
+
+### 完整流程一覽（簡化版）
+
+```
+用戶付款（填信用卡）
+     │
+     ▼  [自動] Stripe webhook → 建帳號 + 開始建 VPS
+     │
+     ▼  官網 success 頁顯示 QR code（自動生成）
+     │
+用戶掃 QR（微信掃一掃）
+     │
+     ▼  [自動] 小程序綁定 openid（0 個表單）
+     │
+     ▼  官網顯示「綁定成功」
+     │
+     ▼  小程序進入等待畫面（若 VPS 還在建）
+     │     或
+     ▼  小程序直接進聊天（若 VPS 已 ready）
+     │
+開始使用龍蝦 AI ✅
+```
+
+**用戶共執行了 2 個動作：填信用卡、用微信掃 QR。**
+
+---
+
+*文件版本：v1.1 — 2026-03-10（新增章節 13-14）*
