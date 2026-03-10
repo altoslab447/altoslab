@@ -1391,4 +1391,263 @@ pages/index onLoad
 
 ---
 
-*文件版本：v1.1 — 2026-03-10（新增章節 13-14）*
+---
+
+## 15. 小程序開發環境建立（Step-by-Step）
+
+### 15.1 安裝微信開發者工具
+
+下載 **Stable 版**（不要用 RC 版，有時有奇怪的 bug）：
+
+> https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html
+
+| 平台 | 注意事項 |
+|------|---------|
+| macOS | 需要授予「完全磁碟存取」權限（系統偏好設定 → 安全性）|
+| Windows | 需要 Windows 10 64-bit 以上；建議關閉 360/防毒軟體再安裝 |
+
+**登入**：打開 DevTools → 掃碼登入（用開發者的微信帳號）。注意：這個微信帳號必須已在公眾平台被加為「開發者」角色，否則掃碼後沒有對應小程序的存取權。
+
+加開發者的方法：公眾平台 → 成員管理 → 開發者 → 添加成員 → 輸入對方微信號。
+
+---
+
+### 15.2 建立小程序專案
+
+1. DevTools → **新建專案**
+2. 填寫：
+   - **AppID**：從公眾平台取得（首頁 → 開發管理 → 開發設置 → AppID）
+   - **專案名稱**：`openclaw-miniprogram`（或你喜歡的名字）
+   - **目錄**：選一個空資料夾
+   - **後端服務**：選「**不使用雲服務**」
+   - **語言**：選「**TypeScript**」
+
+3. 建立後，DevTools 會生成一個 Hello World 範例。把預設頁面全部刪掉，按照章節 7.2 的目錄結構重建：
+
+```bash
+# 刪除預設生成的頁面
+rm -rf pages/index pages/logs
+
+# 建立正確目錄
+mkdir -p pages/index pages/chat pages/bind pages/settings pages/subscribe
+mkdir -p components/chat-bubble components/typing-indicator components/chat-input components/vps-status-badge
+mkdir -p utils assets/icons
+```
+
+4. 更新 `app.json` 的 `pages` 陣列：
+```json
+{
+  "pages": [
+    "pages/index/index",
+    "pages/chat/index",
+    "pages/bind/index",
+    "pages/settings/index",
+    "pages/subscribe/index"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#000000",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#000000"
+  }
+}
+```
+
+---
+
+### 15.3 配置 `project.config.json`
+
+DevTools 自動建立此檔案，確認以下欄位：
+
+```json
+{
+  "appid": "wx1234567890abcdef",
+  "projectname": "openclaw-miniprogram",
+  "setting": {
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true,
+    "newFeature": true,
+    "coverView": true,
+    "nodeModules": true,
+    "autoAudits": false,
+    "checkSiteMap": false,
+    "uploadWithSourceMap": true,
+    "compileHotReLoad": false,
+    "useMultiFrameRuntime": true,
+    "useApiHook": true,
+    "useDevtools": true,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
+  },
+  "compileType": "miniprogram",
+  "libVersion": "3.4.4",
+  "condition": {}
+}
+```
+
+**關閉域名校驗（開發用）**：
+- DevTools 右上角 → **詳情** → **本地設定** → 勾選「**不校驗合法域名、web-view（業務域名）、TLS 版本以及 HTTPS 證書**」
+- 這樣在開發時就可以直接打 `http://localhost:8080`，不需要 HTTPS 或域名白名單
+
+---
+
+### 15.4 安裝 npm 依賴
+
+微信小程序支援 npm，但需要手動觸發建構：
+
+```bash
+# 在專案根目錄
+npm init -y
+npm install --save-dev miniprogram-api-typings
+```
+
+然後在 DevTools：**工具 → 建構 npm**（每次安裝新 package 後都要重新建構）
+
+建構後會生成 `miniprogram_npm/` 資料夾，這是微信實際載入的 npm 包。
+
+**`tsconfig.json`**（放在專案根目錄）：
+
+```json
+{
+  "compilerOptions": {
+    "strictNullChecks": true,
+    "noImplicitAny": true,
+    "module": "CommonJS",
+    "target": "ES2017",
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "typeRoots": ["./node_modules/miniprogram-api-typings", "./typings"],
+    "types": ["miniprogram-api-typings"],
+    "lib": ["ES2017"],
+    "baseUrl": ".",
+    "paths": {}
+  },
+  "include": ["./**/*.ts"],
+  "exclude": ["node_modules"]
+}
+```
+
+---
+
+### 15.5 本地開發流程
+
+**模擬器（Simulator）**：
+- DevTools 左側面板是模擬器，可選擇機型（iPhone 15、Pixel 7 等）和字體大小。
+- 大部分功能可以在模擬器測試，但以下必須在真機測試：`wx.login()`（模擬器的 code 是假的）、相機、支付。
+
+**真機預覽**：
+- DevTools 頂部工具欄 → **預覽** → 掃碼（用自己的手機微信掃）
+- 手機微信必須與 DevTools 登入的是**同一個帳號**，或帳號已被加為開發者
+- 真機的 `wx.login()` 會返回真實的 code，可以正常走完綁定流程
+
+**查看 log**：
+- DevTools → **調試器** 面板 → **Console** tab
+- 在真機上，可以用 DevTools → **真機調試**（需要掃碼連接）查看 console
+
+**常見 bug 排查**：
+
+| 現象 | 原因 | 解法 |
+|------|------|------|
+| `request:fail` | 域名未白名單或未關閉域名校驗 | 勾選「不校驗合法域名」|
+| `wx.login` 返回 err | AppID 與登入帳號不符 | 確認 `project.config.json` 的 appid 正確 |
+| npm import 失敗 | 未建構 npm | DevTools → 工具 → 建構 npm |
+| TS 型別找不到 | tsconfig types 設定錯誤 | 確認 `types: ["miniprogram-api-typings"]` |
+| 模擬器正常但真機失效 | iOS/Android 差異 | 在兩個平台都測試 |
+
+---
+
+### 15.6 與後端串接（本地測試）
+
+**本地後端**（Go 控制平面）：
+
+```bash
+# 啟動本地後端（範例，視實際 Go 專案結構調整）
+cd control-plane
+go run ./cmd/server
+
+# 或用 Docker Compose
+docker compose up
+```
+
+後端預設跑在 `http://localhost:8080`。
+
+**小程序 `utils/constants.ts`**：
+
+```typescript
+// 開發 / 生產環境切換
+const isDev = true; // 手動切換，或用 wx.getAccountInfoSync().miniProgram.envVersion
+
+export const API_BASE_URL = isDev
+    ? 'http://localhost:8080'
+    : 'https://api.openclaw.io';
+
+export const WS_URL = isDev
+    ? 'ws://localhost:8080'
+    : 'wss://ws.openclaw.io';
+```
+
+**驗證串接是否正常**：
+
+```typescript
+// 在 pages/index/index.ts 的 onLoad 中測試
+wx.login({
+    success: (res) => {
+        console.log('wx.login code:', res.code); // 確認有 code
+
+        wx.request({
+            url: `${API_BASE_URL}/api/wechat/login`,
+            method: 'POST',
+            data: { code: res.code },
+            success: (r) => console.log('login response:', r.data),
+            fail: (e) => console.error('login failed:', e),
+        });
+    },
+});
+```
+
+---
+
+### 15.7 上傳 & 發布流程
+
+```
+[本地開發完成]
+        │
+        ▼
+DevTools → 頂部工具欄 → 「上傳」
+填寫版本號（如 1.0.0）和版本描述
+        │
+        ▼
+公眾平台（mp.weixin.qq.com）
+→ 版本管理 → 開發版本 → 剛上傳的版本
+→ 點「設為體驗版」
+        │
+        ▼
+分享體驗版 QR 給測試人員（最多 15 人）
+（公眾平台 → 成員管理 → 體驗成員 → 添加）
+測試通過
+        │
+        ▼
+公眾平台 → 版本管理 → 體驗版 → 「提交審核」
+填寫：
+- 功能描述（說清楚小程序做什麼）
+- 測試帳號（提供審核人員可以用的測試帳號，讓他們能完整操作）
+- 截圖（每個主要頁面截圖）
+        │
+        ▼
+等待審核（第一次通常 1-7 工作天）
+審核通過 → 「發布」→ 正式上線
+```
+
+**審核注意事項**：
+- 審核人員會實際操作小程序，**必須提供可用的測試帳號**（或說明如何進入功能頁面），否則很容易被拒。
+- 若涉及 AI 功能，描述時要說清楚 AI 的應用場景，避免觸發「AI 類服務」的額外審查程序。
+- 首次審核通過後，後續小更新（如 bug fix）通常 1-2 個工作天。
+- 審核被拒時會有原因說明，按照說明修改後可重新提交，不需要重新排隊。
+
+---
+
+*文件版本：v1.2 — 2026-03-10（新增章節 15：小程序開發環境建立）*
