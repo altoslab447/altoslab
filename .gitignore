@@ -16,5 +16,6 @@ USER.md
 
 # Build output at root (from deployment attempts)
 assets/
-docs/
+docs/*.html
+docs/assets/
 index.html
